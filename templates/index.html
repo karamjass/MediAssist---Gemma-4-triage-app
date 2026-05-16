@@ -1,602 +1,682 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MediAssist — Rural Triage AI</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediAssist — Rural Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0a0d0f;
-    --surface: #111518;
-    --card: #161b1f;
-    --border: #1e2730;
-    --border-glow: #1e3a4a;
-    --text: #d4e5ef;
-    --text-dim: #5a7a8a;
-    --text-muted: #3a5060;
-    --accent: #00c9a7;
-    --accent-dim: #007a66;
-    --critical: #ff4757;
-    --critical-bg: #1a0808;
-    --critical-border: #5a1010;
-    --moderate: #ffa502;
-    --moderate-bg: #1a1100;
-    --moderate-border: #5a3a00;
-    --minor: #2ed573;
-    --minor-bg: #081a10;
-    --minor-border: #0e4a22;
-    --mono: 'Space Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,201,167,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,201,167,0.025) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Top accent line */
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    z-index: 100;
-  }
-
-  .container {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 0 20px 60px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* HEADER */
-  header {
-    padding: 36px 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 40px;
-  }
-
-  .logo-group {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-icon {
-    width: 42px; height: 42px;
-    background: var(--accent);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 0 20px rgba(0,201,167,0.3);
-  }
-
-  .logo-text h1 {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.5px;
-  }
-
-  .logo-text span {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .status-badge {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    background: rgba(0,201,167,0.07);
-    border: 1px solid rgba(0,201,167,0.2);
-    padding: 6px 12px;
-    border-radius: 6px;
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* LANG TOGGLE */
-  .lang-toggle {
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 2px;
-    margin-bottom: 28px;
-    width: fit-content;
-  }
-
-  .lang-btn {
-    padding: 7px 18px;
-    border-radius: 5px;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .lang-btn.active {
-    background: var(--accent);
-    color: #000;
-    font-weight: 700;
-  }
-
-  /* CARDS */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 20px;
-    transition: border-color 0.3s;
-  }
-
-  .card:focus-within {
-    border-color: var(--border-glow);
-  }
-
-  .card-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* FORM ELEMENTS */
-  .row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-
-  label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    font-family: var(--mono);
-  }
-
-  input[type="text"], input[type="number"], textarea, select {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    padding: 11px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    resize: none;
-  }
-
-  input:focus, textarea:focus, select:focus {
-    border-color: var(--accent-dim);
-  }
-
-  select option { background: var(--card); }
-
-  textarea {
-    min-height: 120px;
-    line-height: 1.6;
-  }
-
-  /* IMAGE UPLOAD */
-  .upload-zone {
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    background: var(--surface);
-    margin-top: 14px;
-  }
-
-  .upload-zone:hover {
-    border-color: var(--accent-dim);
-    background: rgba(0,201,167,0.03);
-  }
-
-  .upload-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    border: none;
-    background: none;
-  }
-
-  .upload-zone p {
-    font-size: 13px;
-    color: var(--text-dim);
-    pointer-events: none;
-  }
-
-  .upload-zone .upload-icon { font-size: 24px; margin-bottom: 8px; }
-
-  #image-preview {
-    display: none;
-    width: 100%;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: 8px;
-    margin-top: 12px;
-    border: 1px solid var(--border);
-  }
-
-  /* SUBMIT BUTTON */
-  .btn-triage {
-    width: 100%;
-    padding: 16px;
-    background: var(--accent);
-    color: #000;
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-triage:hover:not(:disabled) {
-    background: #00e6be;
-    box-shadow: 0 0 30px rgba(0,201,167,0.4);
-    transform: translateY(-1px);
-  }
-
-  .btn-triage:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-triage .spinner {
-    display: none;
-    width: 18px; height: 18px;
-    border: 2px solid #00000033;
-    border-top-color: #000;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .btn-triage.loading .btn-text { display: none; }
-  .btn-triage.loading .spinner { display: block; }
-
-  /* RESULT SECTION */
-  #result-section {
-    display: none;
-    animation: fadeUp 0.4s ease;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* URGENCY BANNER */
-  .urgency-banner {
-    border-radius: 12px;
-    padding: 22px 28px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    margin-bottom: 16px;
-    border: 1px solid;
-  }
-
-  .urgency-banner.CRITICAL {
-    background: var(--critical-bg);
-    border-color: var(--critical-border);
-  }
-  .urgency-banner.MODERATE {
-    background: var(--moderate-bg);
-    border-color: var(--moderate-border);
-  }
-  .urgency-banner.MINOR {
-    background: var(--minor-bg);
-    border-color: var(--minor-border);
-  }
-
-  .urgency-icon { font-size: 36px; }
-
-  .urgency-right { flex: 1; }
-
-  .urgency-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    opacity: 0.6;
-    margin-bottom: 4px;
-  }
-
-  .urgency-level {
-    font-family: var(--mono);
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -1px;
-  }
-
-  .CRITICAL .urgency-level { color: var(--critical); }
-  .MODERATE .urgency-level { color: var(--moderate); }
-  .MINOR .urgency-level { color: var(--minor); }
-
-  .urgency-condition {
-    font-size: 14px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  .refer-pill {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .refer-yes {
-    background: rgba(255,71,87,0.15);
-    color: var(--critical);
-    border: 1px solid var(--critical-border);
-  }
-
-  .refer-no {
-    background: rgba(46,213,115,0.1);
-    color: var(--minor);
-    border: 1px solid var(--minor-border);
-  }
-
-  /* INFO GRID */
-  .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .info-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-  }
-
-  .info-card.full { grid-column: 1 / -1; }
-
-  .info-title {
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .info-title .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    flex-shrink: 0;
-  }
-
-  .step-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .step-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--text);
-  }
-
-  .step-num {
-    min-width: 24px; height: 24px;
-    background: rgba(0,201,167,0.12);
-    border: 1px solid var(--accent-dim);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .tag {
-    padding: 5px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .tag.danger {
-    background: rgba(255,71,87,0.08);
-    border-color: var(--critical-border);
-    color: #ff6b7a;
-  }
-
-  .notes-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-dim);
-    font-style: italic;
-  }
-
-  .hindi-box {
-    background: rgba(0,201,167,0.04);
-    border: 1px solid rgba(0,201,167,0.15);
-    border-radius: 8px;
-    padding: 14px 16px;
-    font-size: 14px;
-    line-height: 1.8;
-    color: var(--text);
-    direction: ltr;
-  }
-
-  /* ERROR */
-  .error-box {
-    background: var(--critical-bg);
-    border: 1px solid var(--critical-border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    color: var(--critical);
-    font-size: 14px;
-    display: none;
-    margin-bottom: 16px;
-  }
-
-  /* FOOTER */
-  footer {
-    text-align: center;
-    padding-top: 40px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-    margin-top: 20px;
-  }
-
-  footer span { color: var(--accent); }
-
-  @media (max-width: 600px) {
-    .info-grid { grid-template-columns: 1fr; }
-    .row-2 { grid-template-columns: 1fr; }
-    .urgency-banner { flex-wrap: wrap; }
-    header { flex-direction: column; align-items: flex-start; gap: 16px; }
-  }
+:root {
+  --bg:         #f4f6f9;
+  --white:      #ffffff;
+  --surface:    #f9fafb;
+  --border:     #e2e8f0;
+  --border2:    #cbd5e1;
+  --text:       #1e293b;
+  --text-mid:   #475569;
+  --text-light: #94a3b8;
+  --blue:       #1a6fa8;
+  --blue-light: #e8f2fb;
+  --blue-mid:   #2d8fcf;
+  --red:        #dc2626;
+  --red-light:  #fef2f2;
+  --red-border: #fecaca;
+  --amber:      #b45309;
+  --amber-light:#fffbeb;
+  --amber-border:#fde68a;
+  --green:      #15803d;
+  --green-light:#f0fdf4;
+  --green-border:#bbf7d0;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow:     0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
+  --radius:     12px;
+  --serif: 'Lora', Georgia, serif;
+  --sans:  'Nunito', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* HEADER */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 38px; height: 38px;
+  background: var(--blue);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(26,111,168,0.25);
+}
+
+.brand-name {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.brand-name span { color: var(--blue); }
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-blue {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid #bfdbf7;
+}
+
+.badge-green {
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* MAIN LAYOUT */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* CARD */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* LEFT PANEL */
+.form-card {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title-icon {
+  width: 32px; height: 32px;
+  background: var(--blue-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+
+input[type="number"], select, textarea {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  resize: none;
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue-mid);
+  box-shadow: 0 0 0 3px rgba(45,143,207,0.12);
+}
+
+select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+textarea { min-height: 120px; line-height: 1.65; }
+input::placeholder, textarea::placeholder { color: var(--text-light); }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* UPLOAD */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: var(--surface);
+}
+
+.upload-zone:hover {
+  border-color: var(--blue-mid);
+  background: var(--blue-light);
+}
+
+.upload-zone.active {
+  border-color: var(--green);
+  border-style: solid;
+  background: var(--green-light);
+}
+
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+  padding: 0; border: none; background: none;
+}
+
+.upload-inner { pointer-events: none; }
+.upload-emoji { font-size: 26px; margin-bottom: 6px; }
+.upload-text { font-size: 13px; font-weight: 600; color: var(--text-mid); }
+.upload-hint { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+
+#image-preview {
+  display: none;
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+}
+
+/* BUTTON */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #155d8f;
+  box-shadow: 0 4px 16px rgba(26,111,168,0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary .spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-primary.loading .btn-text { display: none; }
+.btn-primary.loading .spinner { display: block; }
+
+/* ERROR */
+.error-box {
+  background: var(--red-light);
+  border: 1px solid var(--red-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--red);
+  font-size: 13px;
+  display: none;
+  font-weight: 500;
+}
+
+/* RIGHT PANEL */
+.right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+/* IDLE */
+.idle-card {
+  padding: 56px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.idle-illustration {
+  width: 80px; height: 80px;
+  background: var(--blue-light);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  margin-bottom: 4px;
+  border: 3px solid #bfdbf7;
+}
+
+.idle-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.idle-sub {
+  font-size: 14px;
+  color: var(--text-mid);
+  max-width: 340px;
+  line-height: 1.75;
+}
+
+.idle-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.idle-chip {
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ANALYZING */
+.analyzing-card {
+  padding: 60px 40px;
+  text-align: center;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.analyzing-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.analyzing-dot {
+  width: 10px; height: 10px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.analyzing-dot:nth-child(2) { animation-delay: 0.15s; }
+.analyzing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.analyzing-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.analyzing-sub { font-size: 14px; color: var(--text-mid); }
+
+/* RESULT */
+#result-section { display: none; flex-direction: column; gap: 18px; }
+
+/* URGENCY BANNER */
+.urgency-card {
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.urgency-card.CRITICAL { background: var(--red-light); border-color: var(--red-border); }
+.urgency-card.MODERATE { background: var(--amber-light); border-color: var(--amber-border); }
+.urgency-card.MINOR    { background: var(--green-light); border-color: var(--green-border); }
+
+.urgency-emoji {
+  width: 58px; height: 58px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.CRITICAL .urgency-emoji { background: #fee2e2; border: 1px solid var(--red-border); }
+.MODERATE .urgency-emoji { background: #fef3c7; border: 1px solid var(--amber-border); }
+.MINOR    .urgency-emoji { background: #dcfce7; border: 1px solid var(--green-border); }
+
+.urgency-body { flex: 1; }
+
+.urgency-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.CRITICAL .urgency-eyebrow { color: var(--red); }
+.MODERATE .urgency-eyebrow { color: var(--amber); }
+.MINOR    .urgency-eyebrow { color: var(--green); }
+
+.urgency-level {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+
+.CRITICAL .urgency-level { color: var(--red); }
+.MODERATE .urgency-level { color: var(--amber); }
+.MINOR    .urgency-level { color: var(--green); }
+
+.urgency-condition { font-size: 14px; color: var(--text-mid); line-height: 1.4; }
+
+.refer-tag {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.refer-tag-yes { background: #fee2e2; color: var(--red); border: 1px solid var(--red-border); }
+.refer-tag-no  { background: #dcfce7; color: var(--green); border: 1px solid var(--green-border); }
+
+.refer-tag-icon { font-size: 18px; }
+.refer-tag-label { font-size: 11px; letter-spacing: 0.5px; }
+
+/* INFO GRID */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-card {
+  padding: 20px 22px;
+  animation: fadeUp 0.35s ease both;
+}
+
+.info-card.full { grid-column: 1 / -1; }
+.info-card:nth-child(1) { animation-delay: 0.05s; }
+.info-card:nth-child(2) { animation-delay: 0.1s; }
+.info-card:nth-child(3) { animation-delay: 0.15s; }
+.info-card:nth-child(4) { animation-delay: 0.2s; }
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-icon {
+  width: 30px; height: 30px;
+  background: var(--blue-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+
+.info-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* STEPS */
+.steps { display: flex; flex-direction: column; gap: 11px; }
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-mid);
+}
+
+.step-n {
+  min-width: 24px; height: 24px;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* TAGS */
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag-vital {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid #bfdbf7;
+}
+
+.tag-warn {
+  background: var(--red-light);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+
+/* NOTES */
+.notes-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-mid);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--blue-mid);
+  font-style: italic;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--white);
+  padding: 16px 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+footer strong { color: var(--text-mid); font-weight: 600; }
+
+/* RESPONSIVE */
+@media (max-width: 860px) {
+  .container { grid-template-columns: 1fr; padding: 20px 16px 40px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .row-2 { grid-template-columns: 1fr; }
+  header { padding: 0 16px; }
+  .urgency-card { flex-wrap: wrap; }
+  .idle-card { padding: 36px 20px; }
+}
 </style>
 </head>
 <body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-icon">🏥</div>
+      <div class="brand-name">Medi<span>Assist</span></div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-blue">Gemma 4 AI</span>
+      <span class="badge badge-green"><span class="live-dot"></span> Live</span>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
 <div class="container">
 
-  <header>
-    <div class="logo-group">
-      <div class="logo-icon">🏥</div>
-      <div class="logo-text">
-        <h1>MediAssist</h1>
-        <span>Gemma 4 · Rural Triage AI</span>
-      </div>
+  <!-- LEFT: FORM -->
+  <div class="card form-card">
+    <div class="card-title">
+      <div class="card-title-icon">👤</div>
+      Patient Information
     </div>
-    <div class="status-badge">
-      <div class="status-dot"></div>
-      OFFLINE CAPABLE
-    </div>
-  </header>
-
-  <!-- Language Toggle -->
-  <div class="lang-toggle" id="langToggle">
-    <button class="lang-btn active" onclick="setLang('English')">EN</button>
-  </div>
-
-  <!-- INPUT CARD -->
-  <div class="card">
-    <div class="card-label">Patient Information</div>
 
     <div class="row-2">
-      <div>
-        <label>Patient Age </label>
-        <input type="number" id="age" placeholder="e.g. 35" min="0" max="120" />
+      <div class="field">
+        <label for="age">Age</label>
+        <input type="number" id="age" placeholder="e.g. 35" min="0" max="120"/>
       </div>
-      <div>
-        <label>Gender </label>
+      <div class="field">
+        <label for="gender">Gender</label>
         <select id="gender">
           <option value="">Select</option>
           <option>Male</option>
@@ -606,229 +686,243 @@
       </div>
     </div>
 
-    <label>Describe Symptoms *</label>
-    <textarea id="symptoms" placeholder="e.g. Patient has severe chest pain radiating to left arm, started 20 minutes ago. Sweating, difficulty breathing..."></textarea>
+    <div class="field">
+      <label for="symptoms">Symptoms <span style="color:#dc2626">*</span></label>
+      <textarea id="symptoms" placeholder="Describe what the patient is experiencing — pain location, severity, duration, when it started..."></textarea>
+    </div>
+
+    <div class="section-label">Optional Photo</div>
 
     <div class="upload-zone" id="uploadZone">
-      <div class="upload-icon">📷</div>
-      <p>Upload wound / condition photo (optional)</p>
-      <p style="font-size:11px; margin-top:4px; color: var(--text-muted)">JPEG, PNG — Gemma 4 multimodal analysis</p>
-      <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
+      <div class="upload-inner">
+        <div class="upload-emoji">📷</div>
+        <div class="upload-text">Upload wound or condition photo</div>
+        <div class="upload-hint">JPEG or PNG — analyzed by Gemma 4</div>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)"/>
     </div>
-    <img id="image-preview" alt="Preview" />
+    <img id="image-preview" alt="Uploaded preview"/>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="btn-primary" id="triageBtn" onclick="runTriage()">
+      <span class="btn-text">Run Triage Assessment</span>
+      <div class="spinner"></div>
+    </button>
   </div>
 
-  <!-- ERROR -->
-  <div class="error-box" id="errorBox"></div>
+  <!-- RIGHT: OUTPUT -->
+  <div class="right-panel" id="rightPanel">
 
-  <!-- SUBMIT -->
-  <button class="btn-triage" id="triageBtn" onclick="runTriage()">
-    <span class="btn-text">⚡ Run Triage Assessment</span>
-    <div class="spinner"></div>
-  </button>
-
-  <!-- RESULT -->
-  <div id="result-section">
-
-    <!-- Urgency Banner -->
-    <div class="urgency-banner" id="urgencyBanner" style="margin-top: 28px;">
-      <div class="urgency-icon" id="urgencyIcon"></div>
-      <div class="urgency-right">
-        <div class="urgency-label">Urgency Level</div>
-        <div class="urgency-level" id="urgencyLevel"></div>
-        <div class="urgency-condition" id="urgencyCondition"></div>
+    <!-- IDLE -->
+    <div class="card idle-card" id="idleState">
+      <div class="idle-illustration">🩺</div>
+      <div class="idle-title">Ready to Assess</div>
+      <div class="idle-sub">Fill in the patient details on the left and click <strong>Run Triage Assessment</strong> to get an instant clinical report.</div>
+      <div class="idle-chips">
+        <span class="idle-chip">🚨 Urgency Level</span>
+        <span class="idle-chip">💊 First Aid Steps</span>
+        <span class="idle-chip">📊 Vitals to Watch</span>
+        <span class="idle-chip">🏥 Refer or Treat</span>
       </div>
-      <div class="refer-pill" id="referPill"></div>
     </div>
 
-    <!-- Info Grid -->
-    <div class="info-grid">
-
-      <!-- First Aid -->
-      <div class="info-card full">
-        <div class="info-title"><span class="dot"></span> First Aid Steps</div>
-        <ul class="step-list" id="firstAidList"></ul>
+    <!-- ANALYZING -->
+    <div class="card analyzing-card" id="analyzingState">
+      <div class="analyzing-dots">
+        <div class="analyzing-dot"></div>
+        <div class="analyzing-dot"></div>
+        <div class="analyzing-dot"></div>
       </div>
-
-      <!-- Vitals -->
-      <div class="info-card">
-        <div class="info-title"><span class="dot"></span> Monitor Vitals</div>
-        <div class="tag-list" id="vitalsList"></div>
-      </div>
-
-      <!-- Do Not -->
-      <div class="info-card">
-        <div class="info-title"><span class="dot"></span> Do NOT Do</div>
-        <div class="tag-list" id="doNotList"></div>
-      </div>
-
-      <!-- Notes -->
-      <div class="info-card full" id="notesCard">
-        <div class="info-title"><span class="dot"></span> Clinical Notes</div>
-        <div class="notes-box" id="notesBox"></div>
-      </div>
-
-      <!-- Hindi Translation -->
-      <div class="info-card full" id="hindiCard" style="display:none;">
-        <div class="info-title"><span class="dot"></span> हिंदी सारांश</div>
-        <div class="hindi-box" id="hindiBox"></div>
-      </div>
-
+      <div class="analyzing-title">Analyzing Patient Data</div>
+      <div class="analyzing-sub">Gemma 4 is reviewing the symptoms and generating a triage report…</div>
     </div>
+
+    <!-- RESULTS -->
+    <div id="result-section">
+
+      <!-- URGENCY BANNER -->
+      <div class="urgency-card" id="urgencyBanner">
+        <div class="urgency-emoji" id="urgencyEmoji"></div>
+        <div class="urgency-body">
+          <div class="urgency-eyebrow">Urgency Level</div>
+          <div class="urgency-level" id="urgencyLevel"></div>
+          <div class="urgency-condition" id="urgencyCondition"></div>
+        </div>
+        <div class="refer-tag" id="referTag">
+          <div class="refer-tag-icon" id="referIcon"></div>
+          <div class="refer-tag-label" id="referLabel"></div>
+        </div>
+      </div>
+
+      <!-- INFO CARDS -->
+      <div class="info-grid" id="infoGrid">
+
+        <div class="card info-card full">
+          <div class="info-card-header">
+            <div class="info-icon">💊</div>
+            <div class="info-title">First Aid Steps</div>
+          </div>
+          <div class="steps" id="firstAidList"></div>
+        </div>
+
+        <div class="card info-card">
+          <div class="info-card-header">
+            <div class="info-icon">📊</div>
+            <div class="info-title">Vitals to Monitor</div>
+          </div>
+          <div class="tags" id="vitalsList"></div>
+        </div>
+
+        <div class="card info-card">
+          <div class="info-card-header">
+            <div class="info-icon">⚠️</div>
+            <div class="info-title">Do NOT Do</div>
+          </div>
+          <div class="tags" id="doNotList"></div>
+        </div>
+
+        <div class="card info-card full" id="notesCard">
+          <div class="info-card-header">
+            <div class="info-icon">📋</div>
+            <div class="info-title">Clinical Notes</div>
+          </div>
+          <div class="notes-text" id="notesBox"></div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
-
-  <footer>
-    Powered by <span>Gemma 4</span> · Built for Gemma 4 Good Hackathon ·
-    <span>Privacy-first — no data leaves device</span>
-  </footer>
-
 </div>
 
+<!-- FOOTER -->
+<footer>
+  <strong>MediAssist</strong> — Built for the Gemma 4 Good Hackathon &nbsp;·&nbsp;
+  Powered by Google Gemma 4 &nbsp;·&nbsp; No patient data is stored
+</footer>
+
 <script>
-  let selectedLang = 'English';
-  let imageBase64 = null;
+let imageBase64 = null;
 
-  function previewImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+function previewImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imageBase64 = ev.target.result;
+    const p = document.getElementById('image-preview');
+    p.src = imageBase64;
+    p.style.display = 'block';
+    const zone = document.getElementById('uploadZone');
+    zone.classList.add('active');
+    zone.querySelector('.upload-text').textContent = '✅ ' + file.name;
+    zone.querySelector('.upload-hint').textContent = 'Image ready for analysis';
+  };
+  reader.readAsDataURL(file);
+}
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imageBase64 = e.target.result;
-      const preview = document.getElementById('image-preview');
-      preview.src = imageBase64;
-      preview.style.display = 'block';
-      document.querySelector('#uploadZone p').textContent = '✅ Image loaded — ' + file.name;
-    };
-    reader.readAsDataURL(file);
+function showState(state) {
+  document.getElementById('idleState').style.display       = state === 'idle'      ? 'flex'  : 'none';
+  document.getElementById('analyzingState').style.display  = state === 'analyzing' ? 'flex'  : 'none';
+  document.getElementById('result-section').style.display  = state === 'result'    ? 'flex'  : 'none';
+}
+
+async function runTriage() {
+  const symptoms = document.getElementById('symptoms').value.trim();
+  const age      = document.getElementById('age').value.trim();
+  const gender   = document.getElementById('gender').value;
+  const errorBox = document.getElementById('errorBox');
+  const btn      = document.getElementById('triageBtn');
+
+  errorBox.style.display = 'none';
+  let full = symptoms;
+  if (gender) full = 'Gender: ' + gender + '. ' + full;
+
+  if (!full) {
+    errorBox.textContent = 'Please describe the patient\'s symptoms before running triage.';
+    errorBox.style.display = 'block';
+    return;
   }
 
-  function urgencyConfig(level) {
-    const cfg = {
-      CRITICAL: { icon: '🚨', color: '#ff4757' },
-      MODERATE: { icon: '⚠️', color: '#ffa502' },
-      MINOR:    { icon: '✅', color: '#2ed573' },
-    };
-    return cfg[level] || cfg.MINOR;
-  }
+  btn.classList.add('loading');
+  btn.disabled = true;
+  showState('analyzing');
 
-  async function runTriage() {
-    const symptoms = document.getElementById('symptoms').value.trim();
-    const age = document.getElementById('age').value.trim();
-    const gender = document.getElementById('gender').value;
-    const errorBox = document.getElementById('errorBox');
-    const btn = document.getElementById('triageBtn');
+  try {
+    const res  = await fetch('/api/triage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symptoms: full, age, language: 'English', image: imageBase64 })
+    });
+    const data = await res.json();
 
-    errorBox.style.display = 'none';
-
-    let fullSymptoms = symptoms;
-    if (gender) fullSymptoms = `Gender: ${gender}. ` + fullSymptoms;
-
-    if (!fullSymptoms) {
-      errorBox.textContent = '⚠ Please describe the patient\'s symptoms.';
+    if (data.error) {
+      showState('idle');
+      errorBox.textContent = data.error;
       errorBox.style.display = 'block';
       return;
     }
+    renderResult(data);
 
-    btn.classList.add('loading');
-    btn.disabled = true;
+  } catch(err) {
+    showState('idle');
+    errorBox.textContent = 'Network error: ' + err.message;
+    errorBox.style.display = 'block';
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
 
-    try {
-      const payload = {
-        symptoms: fullSymptoms,
-        age,
-        language: selectedLang,
-        image: imageBase64
-      };
+function renderResult(d) {
+  const icons = { CRITICAL: '🚨', MODERATE: '⚠️', MINOR: '✅' };
+  const banner = document.getElementById('urgencyBanner');
+  banner.className = 'urgency-card ' + d.urgency;
+  document.getElementById('urgencyEmoji').textContent    = icons[d.urgency] || '✅';
+  document.getElementById('urgencyLevel').textContent    = d.urgency;
+  document.getElementById('urgencyCondition').textContent = d.condition;
 
-      const res = await fetch('/api/triage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      if (data.error) {
-        errorBox.textContent = '⚠ ' + data.error;
-        errorBox.style.display = 'block';
-        return;
-      }
-
-      renderResult(data);
-
-    } catch (err) {
-      errorBox.textContent = '⚠ Network error: ' + err.message;
-      errorBox.style.display = 'block';
-    } finally {
-      btn.classList.remove('loading');
-      btn.disabled = false;
-    }
+  const tag = document.getElementById('referTag');
+  if (d.refer_to_hospital) {
+    tag.className = 'refer-tag refer-tag-yes';
+    document.getElementById('referIcon').textContent  = '🏥';
+    document.getElementById('referLabel').textContent = 'Refer Now';
+    tag.title = d.referral_reason;
+  } else {
+    tag.className = 'refer-tag refer-tag-no';
+    document.getElementById('referIcon').textContent  = '✅';
+    document.getElementById('referLabel').textContent = 'Treat Here';
   }
 
-  function renderResult(d) {
-    const section = document.getElementById('result-section');
-    section.style.display = 'block';
-    section.style.animation = 'none';
-    void section.offsetWidth;
-    section.style.animation = 'fadeUp 0.4s ease';
-
-    // Urgency banner
-    const banner = document.getElementById('urgencyBanner');
-    banner.className = 'urgency-banner ' + d.urgency;
-    const cfg = urgencyConfig(d.urgency);
-    document.getElementById('urgencyIcon').textContent = cfg.icon;
-    document.getElementById('urgencyLevel').textContent = d.urgency;
-    document.getElementById('urgencyCondition').textContent = d.condition;
-
-    // Refer pill
-    const referPill = document.getElementById('referPill');
-    if (d.refer_to_hospital) {
-      referPill.textContent = '🏥 REFER NOW';
-      referPill.className = 'refer-pill refer-yes';
-      referPill.title = d.referral_reason;
-    } else {
-      referPill.textContent = '✅ CLINIC OK';
-      referPill.className = 'refer-pill refer-no';
-    }
-
-    // First aid steps
-    const faList = document.getElementById('firstAidList');
-    faList.innerHTML = (d.first_aid || []).map((step, i) =>
-      `<li><span class="step-num">${i + 1}</span><span>${step}</span></li>`
+  document.getElementById('firstAidList').innerHTML =
+    (d.first_aid || []).map((s, i) =>
+      `<div class="step"><span class="step-n">${i + 1}</span><span>${s}</span></div>`
     ).join('');
 
-    // Vitals
-    const vitals = document.getElementById('vitalsList');
-    vitals.innerHTML = (d.vitals_to_monitor || []).map(v =>
-      `<span class="tag">📊 ${v}</span>`
+  document.getElementById('vitalsList').innerHTML =
+    (d.vitals_to_monitor || []).map(v =>
+      `<span class="tag tag-vital">${v}</span>`
     ).join('');
 
-    // Do not
-    const doNot = document.getElementById('doNotList');
-    doNot.innerHTML = (d.do_not || []).map(v =>
-      `<span class="tag danger">✗ ${v}</span>`
+  document.getElementById('doNotList').innerHTML =
+    (d.do_not || []).map(v =>
+      `<span class="tag tag-warn">✕ ${v}</span>`
     ).join('');
 
-    // Notes
-    if (d.notes) {
-      document.getElementById('notesBox').textContent = d.notes;
-      document.getElementById('notesCard').style.display = 'block';
-    } else {
-      document.getElementById('notesCard').style.display = 'none';
-    }
-
-    // Hindi
-    if (d.hindi_translation) {
-      document.getElementById('hindiBox').textContent = d.hindi_translation;
-      document.getElementById('hindiCard').style.display = 'block';
-    } else {
-      document.getElementById('hindiCard').style.display = 'none';
-    }
-
-    // Scroll to results
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const notesCard = document.getElementById('notesCard');
+  if (d.notes) {
+    document.getElementById('notesBox').textContent = d.notes;
+    notesCard.style.display = 'block';
+  } else {
+    notesCard.style.display = 'none';
   }
+
+  showState('result');
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+showState('idle');
 </script>
 </body>
 </html>
